@@ -113,6 +113,7 @@ function createPanZoom(domElement, options) {
 
   var moveByAnimation;
   var zoomToAnimation;
+  var zoomAndMoveToAnimation;
 
   var multiTouch;
   var paused = false;
@@ -129,6 +130,7 @@ function createPanZoom(domElement, options) {
     zoomTo: publicZoomTo,
     zoomAbs: zoomAbs,
     zoom: zoom,
+    zoomAndMoveTo: zoomAndMoveTo,
     smoothZoom: smoothZoom,
     smoothZoomAbs: smoothZoomAbs,
     showRectangle: showRectangle,
@@ -458,6 +460,41 @@ function createPanZoom(domElement, options) {
     } else {
       zoomByRatio(x, y, ratio);
     }
+  }
+
+  function zoomAndMoveTo(scale, x, y, smooth = true) {
+    var ownerRect = owner.getBoundingClientRect();
+    var bbox = panController.getBBox();
+    var zoomX = (ownerRect.width / 2) + bbox.left;
+    var zoomY = (ownerRect.height / 2) + bbox.top;
+
+    if (smooth) {
+      zoomAndMoveToSmooth(scale, zoomX, zoomY, x, y);
+    } else {
+      zoomAndMoveToInternal(scale, zoomX, zoomY, x, y);
+    }
+  }
+
+  function zoomAndMoveToInternal(scale, zoomX, zoomY, moveX, moveY) {
+    zoomAbs(zoomX, zoomY, scale);
+    moveTo(moveX, moveY);
+  }
+
+  function zoomAndMoveToSmooth(scale, zoomX, zoomY, moveX, moveY) {
+    if (zoomAndMoveToAnimation) zoomAndMoveToAnimation.cancel();
+    smoothScroll.cancel();
+
+    var from = { x: transform.x, y: transform.y, scale: transform.scale };
+    var to = { x: moveX, y: moveY, scale: scale };
+
+    zoomAndMoveToAnimation = animate(from, to, {
+      step: function (v) {
+        zoomAbs(zoomX, zoomY, v.scale);
+
+        moveTo(v.x, v.y);
+      },
+      done: triggerZoomEnd
+    });
   }
 
   function centerOn(ui) {
