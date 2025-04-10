@@ -80,7 +80,7 @@ declare module "panzoom" {
     pause: () => void;
     resume: () => void;
     isPaused: () => boolean;
-    on: <T>(eventName: string, handler: (e: T) => void) => void;
+    on: <T>(eventName: string, handler: (e: T) => void, ctx?: object) => void;
     off: (eventName: string, handler: Function) => void;
     fire: (eventName: string) => void;
     getMinZoom: () => number;
